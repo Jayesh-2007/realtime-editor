@@ -3,12 +3,19 @@ import Client from "../components/Client.js";
 import Editor from "../components/Editor.js";
 import Actions from "../Actions.js";
 import { initSocket } from "../socket.js";
-import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  Navigate,
+} from "react-router-dom";
 import { toast } from "react-hot-toast";
-import react from "react";
+import client from "react-dom/client";
 
 const EditorPage = () => {
-   const { roomId } = useParams();
+  const [clients, setClients] = useState([]);
+
+  const { roomId } = useParams();
   const socketRef = useRef(null);
   const location = useLocation();
   const reactNavigator = useNavigate();
@@ -28,19 +35,42 @@ const EditorPage = () => {
         roomId,
         username: location.state?.username,
       });
+
+      // listening for joined event
+      socketRef.current.on(
+        Actions.JOINED,
+        ({ clients, username, socketId }) => {
+          if (username !== location.state?.username) {
+            toast.success(`${username} joined the room.`);
+            console.log(`${username} joined`);
+          }
+          setClients([
+            ...new Map(clients.map((c) => [c.socketId, c])).values(),
+          ]);
+        }
+      );
+
+      // listing for disconnected
+      socketRef.current.on(Actions.DISCONNECTED, ({ socketId, username }) => {
+        toast.success(`${username} left the room.`);
+        setClients((prev) => {
+          return prev.filter((client) => client.socketId != socketId);
+        });
+      });
     };
     init();
+    // ✅ cleanup
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current.off(Actions.JOINED);
+        socketRef.current.off(Actions.DISCONNECTED);
+      }
+    };
   }, []);
 
-  const [clinets, setClients] = useState([
-    { socketId: 1, username: "Mark K" },
-    { socketId: 2, username: "John M" },
-    { socketId: 3, username: "Byron" },
-    { socketId: 4, username: "Sanyam" },
-  ]);
-
-  if(!location.state) {
-    return <Navigate to="/"/>
+  if (!location.state) {
+    return <Navigate to="/" />;
   }
   return (
     <div className="mainWrap">
@@ -51,7 +81,7 @@ const EditorPage = () => {
           </div>
           <h3>Connected</h3>
           <div className="clientsList">
-            {clinets.map((client) => {
+            {clients.map((client) => {
               return (
                 <Client key={client.socketId} username={client.username} />
               );
