@@ -75,7 +75,7 @@ const Home = () => {
       </div>
       <footer>
         <h4>
-          Built with &#128155; by <a href="">Coder</a>
+          Built with &#128155; by <a href="/">Coder</a>
         </h4>
       </footer>
     </div>
