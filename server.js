@@ -71,8 +71,6 @@
 //   console.log("listing on 5000");
 // });
 
-
-
 /*****************************************- bug fixed code ***************************************************************** */
 
 const express = require("express");
@@ -136,10 +134,18 @@ io.on("connection", (socket) => {
 
   socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
     console.log(`[SERVER] received code:`, code);
-    console.log("[SERVER] broadcasting to room", roomId, "event:", ACTIONS.CODE_CHANGE);
+    console.log(
+      "[SERVER] broadcasting to room",
+      roomId,
+      "event:",
+      ACTIONS.CODE_CHANGE
+    );
     console.log(`[CODE_CHANGE] from ${socket.id} in room ${roomId}`);
     roomCode[roomId] = code;
     socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+  });
+  socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+    io.to(socketId).emit(ACTIONS.CODE_CHANGE, {code});
   });
 
   socket.on("disconnecting", () => {

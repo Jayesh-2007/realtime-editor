@@ -120,6 +120,7 @@ import { toast } from "react-hot-toast";
 
 const EditorPage = () => {
   const [clients, setClients] = useState([]);
+  const codeRef = useRef(null);
   const { roomId } = useParams();
   const socketRef = useRef(null);
   const location = useLocation();
@@ -158,6 +159,10 @@ const EditorPage = () => {
           setClients([
             ...new Map(clients.map((c) => [c.socketId, c])).values(),
           ]);
+          socketRef.current.emit(ACTIONS.SYNC_CODE, {
+            code: codeRef.current,
+            socketId,
+          });
         }
       );
 
@@ -187,7 +192,6 @@ const EditorPage = () => {
     return <Navigate to="/" />;
   }
 
-  // ✅ Copy Room ID
   const copyRoomId = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
@@ -228,7 +232,13 @@ const EditorPage = () => {
 
       <div className="editorWrap">
         {socketRef.current && (
-          <Editor socketRef={socketRef} roomId={roomId} />
+          <Editor
+            socketRef={socketRef}
+            roomId={roomId}
+            onCodeChange={(code) => {
+              codeRef.current = code;
+            }}
+          />
         )}
       </div>
     </div>

@@ -142,7 +142,7 @@ import "codemirror/addon/edit/closetag";
 import "codemirror/addon/edit/closebrackets";
 import ACTIONS from "../Actions";
 
-const Editor = ({ roomId, socketRef }) => {
+const Editor = ({ roomId, socketRef, onCodeChange }) => {
   const editorRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -162,6 +162,7 @@ const Editor = ({ roomId, socketRef }) => {
       editorRef.current.on("change", (instance, changes) => {
         const { origin } = changes;
         const code = instance.getValue();
+        onCodeChange(code);
         if (origin !== "setValue" && socketRef.current) {
           console.log("[CLIENT->SERVER] sending code:", code);
           socketRef.current.emit(ACTIONS.CODE_CHANGE, { roomId, code });
@@ -175,7 +176,7 @@ const Editor = ({ roomId, socketRef }) => {
         editorRef.current = null;
       }
     };
-  }, [roomId]); // ✅ depends only on roomId (not socketRef)
+  }, [roomId, socketRef]); // ✅ depends on roomId and socketRef
 
   // 2️⃣ Handle incoming code updates
   useEffect(() => {
